@@ -6,180 +6,410 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; }
-    #map { width: 100%; height: 100vh; }
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
 
     #header-bar {
-      position: fixed; top: 0; left: 0; width: 100%;
-      background: #ffffff; padding: 5px 0; text-align: center;
-      z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: #ffffff;
+      padding: 5px 0;
+      text-align: center;
+      z-index: 9999;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    #header-bar img { max-height: 50px; display: block; margin: 0 auto; }
+
+    #header-bar img {
+      max-height: 50px;
+      height: auto;
+      width: auto;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
 
     #footer-fixed {
-      position: fixed; bottom: 0; left: 0; width: 100%;
-      background: #ffffff; text-align: center; z-index: 9999;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #ffffff;
+      text-align: center;
+      z-index: 9999;
       box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
     }
-    #footer-fixed img { max-height: 50px; display: block; margin: 0 auto; }
+
+    #footer-fixed img {
+      max-height: 50px;
+      height: auto;
+      width: auto;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
 
     @media (max-width: 600px) {
-      #header-bar img, #footer-fixed img { max-height: 40px; }
+      #header-bar img,
+      #footer-fixed img {
+        max-height: 40px;
+      }
+    }
+
+    /* ===== Bottom Sheet ===== */
+    #bottom-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-height: 60%;
+      background: #fff;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+      border-radius: 15px 15px 0 0;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.3s ease-in-out;
+      z-index: 10000;
+      padding: 15px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #bottom-sheet.active {
+      transform: translateY(0);
+    }
+
+    #sheet-content {
+      max-height: 100%;
+    }
+
+    #close-btn {
+      display: block;
+      text-align: center;
+      padding: 8px;
+      background: #f1f1f1;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-<div id="header-bar"><img src="2.png" alt="الهيدر الأول"></div>
-<div id="footer-fixed"><img src="3.png" alt="صورة ثابتة أسفل الشاشة"></div>
+
+<div id="header-bar">
+  <img src="2.png" alt="الهيدر الأول">
+</div>
+<div id="footer-fixed">
+  <img src="3.png" alt="صورة ثابتة أسفل الشاشة">
+</div>
+
 <div id="map"></div>
+
+<!-- Bottom Sheet -->
+<div id="bottom-sheet">
+  <div id="close-btn">إغلاق ✖</div>
+  <div id="sheet-content"></div>
+</div>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.3/mapbox-gl-rtl-text.js"></script>
 
 <script>
-mapboxgl.accessToken = 'pk.eyJ1IjoiZm1vcSIsImEiOiJjbWM3cXpkMGIwMXNqMm1zYWNlM3A4aGF1In0.DPnFXiDw2HMRy3rPnw8V-A';
+  mapboxgl.accessToken = 'pk.eyJ1IjoiZm1vcSIsImEiOiJjbWM3cXpkMGIwMXNqMm1zYWNlM3A4aGF1In0.DPnFXiDw2HMRy3rPnw8V-A';
 
-mapboxgl.setRTLTextPlugin(
-  'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.3/mapbox-gl-rtl-text.js',
-  null, true
-);
+  mapboxgl.setRTLTextPlugin(
+    'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.3/mapbox-gl-rtl-text.js',
+    null,
+    true
+  );
 
-const map = new mapboxgl.Map({
-  container: 'map',
-  style: 'mapbox://styles/mapbox/satellite-streets-v12',
-  center: [43.965, 26.370],
-  zoom: 10
-});
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/satellite-streets-v12',
+    center: [43.965, 26.370],
+    zoom: 10
+  });
 
-const plots = {
-  type: 'FeatureCollection',
-  features: [
-    { type: 'Feature', properties: { number: '1', status: 'متاحة', area: '300 م²', price: '1,000,000 ريال', type: 'سكنية', note: 'موقع ممتاز داخل حي النهضة', color: '#00cc66' },
-      geometry: { type: 'Polygon', coordinates: [[[43.931421,26.396405],[43.931479,26.396259],[43.931662,26.396322],[43.931585,26.396460],[43.931421,26.396405]]] } },
-    { type: 'Feature', properties: { number: '2', status: 'إيجار', area: '400 م²', price: '950,000 ريال', type: 'سكنية', note: 'متاحة للإيجار السنوي', color: '#ffcc00' },
-      geometry: { type: 'Polygon', coordinates: [[[43.932321,26.350595],[43.932484,26.350678],[43.932598,26.350494],[43.932430,26.350426],[43.932321,26.350595]]] } },
-    { type: 'Feature', properties: { number: '3', status: 'تجارية', area: '1000 م²', price: '2,000,000 ريال', type: 'تجارية', note: 'للبيع - أربع شوارع', color: '#3366ff' },
-      geometry: { type: 'Polygon', coordinates: [[[43.944851,26.366670],[43.946079,26.367214],[43.946318,26.366764],[43.945128,26.366272],[43.944851,26.366670]]] } },
-    { type: 'Feature', properties: { number: '4', status: 'متاحة', area: '500 م²', price: 'على السوم', type: 'سكنية', note: 'لا يوجد', color: '#00cc66' },
-      geometry: { type: 'Polygon', coordinates: [[[43.923934,26.383338],[43.924125,26.383362],[43.924164,26.383150],[43.923963,26.383135],[43.923934,26.383338]]] } }
-  ]
-};
-
-map.on('load', () => {
-  const availablePlots = plots.features;
-  const availableCount = availablePlots.length;
-
-  // دبوس المدينة الكبير
-  const cityMarker = {
+  const plots = {
     type: 'FeatureCollection',
-    features: [{ type: 'Feature', properties: { name: `بريدة (${availableCount} قطع)` }, geometry: { type: 'Point', coordinates: [43.965, 26.370] } }]
+    features: [
+      {
+        type: 'Feature',
+        properties: {
+          number: '1',
+          status: 'متاحة',
+          area: '300 م²',
+          price: '1,000,000 ريال',
+          type: 'سكنية',
+          note: 'موقع ممتاز داخل حي النهضة',
+          color: '#00cc66'
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[
+            [43.93142135515229, 26.396405063269828],
+            [43.931479693197076, 26.39625970824177],
+            [43.93166275395832, 26.396322174887835],
+            [43.93158564045084, 26.396460322158113],
+            [43.93142135515229, 26.396405063269828]
+          ]]
+        }
+      },
+      {
+        type: 'Feature',
+        properties: {
+          number: '2',
+          status: 'إيجار',
+          area: '400 م²',
+          price: '950,000 ريال',
+          type: 'سكنية',
+          note: 'متاحة للإيجار السنوي',
+          color: '#ffcc00'
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[
+            [43.93232153249957, 26.350595891647693],
+            [43.93248464080384, 26.350678319344027],
+            [43.9325984372952, 26.350494768929714],
+            [43.932430587470456, 26.35042678722089],
+            [43.93232153249957, 26.350595891647693]
+          ]]
+        }
+      },
+      {
+        type: 'Feature',
+        properties: {
+          number: '3',
+          status: 'تجارية',
+          area: '1000 م²',
+          price: '2,000,000 ريال',
+          type: 'تجارية',
+          note: 'للبيع - أربع شوارع',
+          color: '#3366ff'
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[
+            [43.94485148251178, 26.366670317944635],
+            [43.94607972485748, 26.36721412799055],
+            [43.94631868251229, 26.366764521442875],
+            [43.94512867339136, 26.366272093217408],
+            [43.94485148251178, 26.366670317944635]
+          ]]
+        }
+      },
+      {
+        type: 'Feature',
+        properties: {
+          number: '4',
+          status: 'متاحة',
+          area: '500 م²',
+          price: 'على السوم',
+          type: 'سكنية',
+          note: 'لا يوجد',
+          color: '#00cc66'
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[
+            [43.92393469477107, 26.38333881837573],
+            [43.924125860890086, 26.383362365860375],
+            [43.9241640941139, 26.3831504383257],
+            [43.92396336968893, 26.383135453535793],
+            [43.92393469477107, 26.38333881837573]
+          ]]
+        }
+      }
+    ]
   };
 
-  map.addSource('city-marker', { type: 'geojson', data: cityMarker });
-  map.loadImage('https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png', (err, img) => {
-    if (err) throw err;
-    if (!map.hasImage('custom-marker')) map.addImage('custom-marker', img);
-
-    map.addLayer({
-      id: 'city-marker-layer',
-      type: 'symbol',
-      source: 'city-marker',
-      layout: { 'icon-image': 'custom-marker', 'icon-size': 1, 'text-field': ['get','name'], 'text-offset':[0,1.5], 'text-anchor':'top' },
-      paint: { 'text-color': '#000', 'text-halo-color':'#fff', 'text-halo-width':2 }
-    });
-
-    map.on('click','city-marker-layer',()=> {
-      map.setLayoutProperty('city-marker-layer','visibility','none');
-      const bounds = new mapboxgl.LngLatBounds();
-      availablePlots.forEach(f=>f.geometry.coordinates[0].forEach(c=>bounds.extend(c)));
-      map.fitBounds(bounds,{padding:100});
-      if (map.getLayer('plot-markers-layer')) map.setLayoutProperty('plot-markers-layer','visibility','visible');
-    });
-  });
-
-  map.addSource('plots', { type: 'geojson', data: plots });
-  map.addLayer({ id:'plots-fill', type:'fill', source:'plots', paint:{'fill-color':['get','color'],'fill-opacity':0.5} });
-  map.addLayer({ id:'plots-outline', type:'line', source:'plots', paint:{'line-color':'#000','line-width':1} });
-  map.addLayer({ id:'plots-labels', type:'symbol', source:'plots',
-    layout:{'text-field':['get','number'],'text-size':16,'text-anchor':'center'},
-    paint:{'text-color':'#000','text-halo-color':'#fff','text-halo-width':1}
-  });
-
-  // الدوائر لكل قطعة
-  const plotMarkers = {
-    type:'FeatureCollection',
-    features:availablePlots.map(f=>{
-      const coords=f.geometry.coordinates[0]; let lng=0,lat=0;
-      coords.forEach(c=>{lng+=c[0];lat+=c[1];});
-      return {type:'Feature',properties:f.properties,geometry:{type:'Point',coordinates:[lng/coords.length,lat/coords.length]}};
-    })
-  };
-  map.addSource('plot-markers',{type:'geojson',data:plotMarkers});
-  map.addLayer({
-    id:'plot-markers-layer',type:'circle',source:'plot-markers',
-    layout:{visibility:'none'},
-    paint:{'circle-radius':10,'circle-color':['match',['get','status'],'متاحة','#00cc66','إيجار','#ffcc00','تجارية','#3366ff','#000'],'circle-stroke-color':'#fff','circle-stroke-width':2}
-  });
-
-  function mediaForPlot(number){
-    if(number==="2"){
-      return `
-      <div style="grid-column:1/span 2;overflow-y:auto;max-height:150px;padding:5px;">
-        <strong>صور:</strong><br>
-        <img src="img2.png" style="max-width:100%;margin-top:6px;border-radius:8px;">
-        <video src="ved2.mp4" controls style="max-width:100%;margin-top:6px;border-radius:8px;"></video>
-      </div>`;
-    }
-    return '';
+  // 🔹 Bottom Sheet Function
+  function openBottomSheet(props, mediaHtml) {
+    const sheet = document.getElementById("bottom-sheet");
+    const content = document.getElementById("sheet-content");
+    content.innerHTML = `
+      <div style="font-family:sans-serif; direction:rtl;">
+        <div style="font-weight:bold; margin-bottom:8px; text-align:center;">التفاصيل</div>
+        <div style="display:grid; grid-template-columns:repeat(2, auto); gap:6px;">
+          <div style="background:#f5f5f5; padding:5px; border-radius:4px;">رقم القطعة:<br><strong>${props.number}</strong></div>
+          <div style="background:#f5f5f5; padding:5px; border-radius:4px;">الحالة:<br><strong>${props.status}</strong></div>
+          <div style="background:#f5f5f5; padding:5px; border-radius:4px;">النوع:<br><strong>${props.type}</strong></div>
+          <div style="background:#f5f5f5; padding:5px; border-radius:4px;">المساحة:<br><strong>${props.area}</strong></div>
+          <div style="grid-column:1/span 2; background:#f5f5f5; padding:5px; border-radius:4px;">السعر:<br><strong>${props.price}</strong></div>
+          <div style="grid-column:1/span 2; background:#f5f5f5; padding:5px; border-radius:4px;">ملاحظات:<br><strong>${props.note}</strong></div>
+          ${mediaHtml}
+        </div>
+      </div>
+    `;
+    sheet.classList.add("active");
   }
 
-  // تفاصيل عند الضغط على قطعة
-  map.on('click','plots-fill',(e)=>{
-    const p=e.features[0].properties;
-    new mapboxgl.Popup()
-    .setLngLat(e.lngLat)
-    .setHTML(`
-      <div style="font-family:sans-serif;direction:rtl;max-height:300px;overflow-y:auto;touch-action:auto;">
-        <b>التفاصيل</b>
-        <div style="display:grid;grid-template-columns:repeat(2,auto);gap:6px;">
-          <div>رقم:<br><b>${p.number}</b></div>
-          <div>الحالة:<br><b>${p.status}</b></div>
-          <div>النوع:<br><b>${p.type}</b></div>
-          <div>المساحة:<br><b>${p.area}</b></div>
-          <div style="grid-column:1/span 2;">السعر:<br><b>${p.price}</b></div>
-          <div style="grid-column:1/span 2;">ملاحظات:<br><b>${p.note}</b></div>
-          ${mediaForPlot(p.number)}
+  // 🔹 Media for plot 2
+  function mediaForPlot(number) {
+    if (number === "2") {
+      return `
+        <div style="grid-column:1/span 2; background:#f5f5f5; padding:5px; border-radius:4px;">
+          <strong>الصور:</strong><br>
+          <img src="img2.png" alt="صورة الأرض 2" style="max-width:100%; border-radius:8px; margin-top:6px;">
         </div>
-      </div>`)
-    .addTo(map);
-  });
+        <div style="grid-column:1/span 2; background:#f5f5f5; padding:5px; border-radius:4px;">
+          <strong>الفيديو:</strong><br>
+          <video src="ved2.mp4" controls style="max-width:100%; border-radius:8px; margin-top:6px;"></video>
+        </div>
+      `;
+    }
+    return "";
+  }
 
-  map.on('click','plot-markers-layer',(e)=>{
-    const p=e.features[0].properties;
-    const plot=plots.features.find(f=>f.properties.number===p.number);
-    const coords=plot.geometry.coordinates[0]; const bounds=new mapboxgl.LngLatBounds();
-    coords.forEach(c=>bounds.extend(c));
-    map.fitBounds(bounds,{padding:50});
-    map.once('moveend',()=>{
-      new mapboxgl.Popup()
-      .setLngLat(bounds.getCenter())
-      .setHTML(`
-        <div style="font-family:sans-serif;direction:rtl;max-height:300px;overflow-y:auto;touch-action:auto;">
-          <b>التفاصيل</b>
-          <div style="display:grid;grid-template-columns:repeat(2,auto);gap:6px;">
-            <div>رقم:<br><b>${p.number}</b></div>
-            <div>الحالة:<br><b>${p.status}</b></div>
-            <div>النوع:<br><b>${p.type}</b></div>
-            <div>المساحة:<br><b>${p.area}</b></div>
-            <div style="grid-column:1/span 2;">السعر:<br><b>${p.price}</b></div>
-            <div style="grid-column:1/span 2;">ملاحظات:<br><b>${p.note}</b></div>
-            ${mediaForPlot(p.number)}
-          </div>
-        </div>`)
-      .addTo(map);
+  map.on('load', () => {
+    const allPlots = plots.features;
+    const totalCount = allPlots.length;
+
+    // دبوس رئيسي للمدينة
+    const cityMarker = {
+      type: 'FeatureCollection',
+      features: [{
+        type: 'Feature',
+        properties: {
+          name: `بريدة (${totalCount} قطع)`
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [43.965, 26.370]
+        }
+      }]
+    };
+
+    map.addSource('city-marker', { type: 'geojson', data: cityMarker });
+
+    map.loadImage('https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png', (err, img) => {
+      if (err) throw err;
+      if (!map.hasImage('custom-marker')) map.addImage('custom-marker', img);
+
+      map.addLayer({
+        id: 'city-marker-layer',
+        type: 'symbol',
+        source: 'city-marker',
+        layout: {
+          'icon-image': 'custom-marker',
+          'icon-size': [
+            'interpolate', ['linear'], ['zoom'],
+            10, 1.5,
+            16, 0.4
+          ],
+          'text-field': ['get', 'name'],
+          'text-offset': [0, 1.5],
+          'text-anchor': 'top',
+          'text-size': [
+            'interpolate', ['linear'], ['zoom'],
+            10, 20,
+            16, 10
+          ]
+        },
+        paint: {
+          'text-color': '#000000',
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 2
+        }
+      });
+
+      // عند الضغط → يظهر جميع دبابيس القطع
+      map.on('click', 'city-marker-layer', () => {
+        map.setLayoutProperty('city-marker-layer', 'visibility', 'none');
+
+        const bounds = new mapboxgl.LngLatBounds();
+        allPlots.forEach(f => {
+          f.geometry.coordinates[0].forEach(coord => bounds.extend(coord));
+        });
+        map.fitBounds(bounds, { padding: 100 });
+
+        if (map.getLayer('plot-markers-layer')) {
+          map.setLayoutProperty('plot-markers-layer', 'visibility', 'visible');
+        }
+      });
+    });
+
+    // مصادر ورسومات القطع
+    map.addSource('plots', { type: 'geojson', data: plots });
+    map.addLayer({
+      id: 'plots-fill',
+      type: 'fill',
+      source: 'plots',
+      paint: {
+        'fill-color': ['get', 'color'],
+        'fill-opacity': 0.5
+      }
+    });
+    map.addLayer({
+      id: 'plots-outline',
+      type: 'line',
+      source: 'plots',
+      paint: {
+        'line-color': '#000',
+        'line-width': 1
+      }
+    });
+
+    // حساب مراكز القطع
+    const plotMarkers = {
+      type: 'FeatureCollection',
+      features: allPlots.map(f => {
+        const coords = f.geometry.coordinates[0];
+        let lng = 0, lat = 0;
+        coords.forEach(c => { lng += c[0]; lat += c[1]; });
+        lng /= coords.length;
+        lat /= coords.length;
+        return {
+          type: 'Feature',
+          properties: f.properties,
+          geometry: { type: 'Point', coordinates: [lng, lat] }
+        };
+      })
+    };
+
+    map.addSource('plot-markers', { type: 'geojson', data: plotMarkers });
+    map.addLayer({
+      id: 'plot-markers-layer',
+      type: 'circle',
+      source: 'plot-markers',
+      layout: { 'visibility': 'none' },
+      paint: {
+        'circle-radius': 10,
+        'circle-color': [
+          'match',
+          ['get', 'status'],
+          'متاحة', '#00cc66',
+          'إيجار', '#ffcc00',
+          'تجارية', '#3366ff',
+          '#000000'
+        ],
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-width': 2
+      }
+    });
+
+    // عند الضغط على القطعة
+    map.on('click', 'plot-markers-layer', (e) => {
+      const props = e.features[0].properties;
+      const mediaHtml = mediaForPlot(props.number);
+      openBottomSheet(props, mediaHtml);
     });
   });
-});
+
+  // زر إغلاق
+  document.getElementById("close-btn").addEventListener("click", () => {
+    document.getElementById("bottom-sheet").classList.remove("active");
+  });
 </script>
 </body>
 </html>
