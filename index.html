@@ -373,20 +373,33 @@
 
       new mapboxgl.Popup()
         .setLngLat(e.lngLat)
-        .setHTML(`
-          <div style="font-family:sans-serif; direction:rtl;">
-            <div style="font-weight:bold; margin-bottom:8px; text-align:center;">التفاصيل</div>
-            <div style="display:grid; grid-template-columns:repeat(2, auto); gap:6px;">
-              <div style="background:#f5f5f5; padding:5px; border-radius:4px;">رقم القطعة:<br><strong>${props.number}</strong></div>
-              <div style="background:#f5f5f5; padding:5px; border-radius:4px;">الحالة:<br><strong>${props.status}</strong></div>
-              <div style="background:#f5f5f5; padding:5px; border-radius:4px;">النوع:<br><strong>${props.type}</strong></div>
-              <div style="background:#f5f5f5; padding:5px; border-radius:4px;">المساحة:<br><strong>${props.area}</strong></div>
-              <div style="grid-column:1/span 2; background:#f5f5f5; padding:5px; border-radius:4px;">السعر:<br><strong>${props.price}</strong></div>
-              <div style="grid-column:1/span 2; background:#f5f5f5; padding:5px; border-radius:4px;">ملاحظات:<br><strong>${props.note}</strong></div>
-              ${mediaHtml}
-            </div>
-          </div>
-        `)
+     .setHTML(`
+  <div style="font-family:sans-serif; direction:rtl; max-height:400px; overflow-y:auto;">
+    <div style="font-weight:bold; margin-bottom:8px; text-align:center;">التفاصيل</div>
+    <div style="display:grid; grid-template-columns:repeat(2, auto); gap:6px;">
+      <div style="background:#f5f5f5; padding:5px; border-radius:4px;">
+        رقم القطعة:<br><strong>${props.number}</strong>
+      </div>
+      <div style="background:#f5f5f5; padding:5px; border-radius:4px;">
+        الحالة:<br><strong>${props.status}</strong>
+      </div>
+      <div style="background:#f5f5f5; padding:5px; border-radius:4px;">
+        النوع:<br><strong>${props.type}</strong>
+      </div>
+      <div style="background:#f5f5f5; padding:5px; border-radius:4px;">
+        المساحة:<br><strong>${props.area}</strong>
+      </div>
+      <div style="grid-column:1/span 2; background:#f5f5f5; padding:5px; border-radius:4px;">
+        السعر:<br><strong>${props.price}</strong>
+      </div>
+      <div style="grid-column:1/span 2; background:#f5f5f5; padding:5px; border-radius:4px;">
+        ملاحظات:<br><strong>${props.note}</strong>
+      </div>
+      ${mediaHtml}
+    </div>
+  </div>
+`)
+
         .addTo(map);
     });
 
